@@ -6,7 +6,7 @@
 #    By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 16:03:40 by kichkiro          #+#    #+#              #
-#    Updated: 2025/03/24 17:08:19 by kichkiro         ###   ########.fr        #
+#    Updated: 2025/03/25 12:07:39 by kichkiro         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,8 @@
 NAME		:= ft_ping
 SRCS		:= \
 				main/main.c \
-				utils/logger.c 				
+				utils/logger.c \
+				parser/parser.c
 SRC_DIR     := src
 SRCS        := $(SRCS:%=$(SRC_DIR)/%)
 BUILD_DIR   := .build
