@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:00:59 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/25 16:45:32 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/03/26 15:04:52 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,14 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <ctype.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/ip.h>
+#include <netinet/in.h>
+#include <netinet/ip_icmp.h>
+#include <time.h>
+#include <netdb.h>
 
 // Colors --------------------------------------------------------------------->
 #define NO_COLOR "\033[0m"
@@ -79,8 +87,8 @@
     "            HOST ..."
 
 // ICMP TYPE ------------------------------------------------------------------>
-#define ECHO_REPLY   0
-#define ECHO_REQUEST 8
+// #define ECHO_REPLY   0
+// #define ECHO_REQUEST 8
 
 // Structures ----------------------------------------------------------------->
 typedef struct {
@@ -139,7 +147,7 @@ typedef struct {
 } t_options;
 
 typedef struct {
-    uint32_t host_ip;
+    struct in_addr host_ip;
     char *host_fqdn;
     t_options options;
 } t_args;
@@ -153,12 +161,9 @@ typedef struct {
     char data[32];    
 } t_icmp_pachet;
 
-// Main ----------------------------------------------------------------------->
-
-// Parser --------------------------------------------------------------------->
+// Functions ------------------------------------------------------------------>
+void ping(t_args *args);
 void parser(char **raw, t_args *args);
-
-// Utils  --------------------------------------------------------------------->
 void logger(char *msg, int level, bool to_exit, int exit_code);
 
 #endif

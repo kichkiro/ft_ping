@@ -6,24 +6,24 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/25 11:33:58 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/25 16:58:43 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/03/26 15:03:09 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
+static void set_host(char *raw_host, t_args *args) {
+	if (isdigit(raw_host[0])) {
+		if (inet_pton(AF_INET, raw_host, &args->host_ip) != 1)
+			logger("ping: inet_pton failed", ERROR, true, 0);
+	} else
+		args->host_fqdn = raw_host;
+}
+
 static void set_opt_with_value(t_args *args, char **raw, size_t *i) {
-	char msg[140];
 	char *opt, *val;
 	
 	opt = raw[*i];
-    if (!raw[*i + 1]) {
-		if (strlen(opt) == 2)
-			sprintf(msg, "ping: option requires an argument -- '%c'\n%s", opt[1], OPT_HELP);
-		else 
-			sprintf(msg, "ping: option '%s' requires an argument\n%s", opt, OPT_HELP);
-        logger(msg, WARNING, true, 1);
-	}
 	val = raw[*i + 1];
 	(*i)++;
     if (!strcmp(opt, "--linger") || !strcmp(opt, "-W")) {
@@ -50,13 +50,11 @@ static void set_opt_with_value(t_args *args, char **raw, size_t *i) {
     } else if (!strcmp(opt, "--ip-timestamp")) {
         args->options.ip_timestamp.set = true;
         args->options.ip_timestamp.val = atoi(val);
-    } else {
-        logger("Unknown option with value", ERROR, true, 1);
-    }
+	}
 }
 
 static void info_options(char *opt) {	
-	if (!strcmp(opt, "--help" || !strcmp(opt, "-?")))
+	if (!strcmp(opt, "--help") || !strcmp(opt, "-?"))
 		logger(OPT_MSG_HELP, INFO, true, 0);
 	else if (!strcmp(opt, "--version") || !strcmp(opt, "-V"))
 		logger(OPT_MSG_VERSION, INFO, true, 0);
@@ -65,6 +63,8 @@ static void info_options(char *opt) {
 }
 
 void parser(char **raw, t_args *args) {
+	char msg[140];
+	
 	for (size_t i = 1; raw[i]; i++) {
 		if (!strcmp(raw[i], "--help") || !strcmp(raw[i], "-?") || 
 			!strcmp(raw[i], "--version") || !strcmp(raw[i], "-V") || 
@@ -85,11 +85,23 @@ void parser(char **raw, t_args *args) {
 			!strcmp(raw[i], "--size") || !strcmp(raw[i], "-s") || \
 			!strcmp(raw[i], "--tos") || !strcmp(raw[i], "-T") || \
 			!strcmp(raw[i], "--ttl") || !strcmp(raw[i], "--ip-timestamp")) {
-			set_opt_with_value(args, raw, &i);
+			if (!raw[i + 1]) {
+				if (strlen(raw[i]) == 2)
+					sprintf(msg, "ping: option requires an argument -- '%c'\n%s", raw[i][1], OPT_HELP);
+				else 
+					sprintf(msg, "ping: option '%s' requires an argument\n%s", raw[i], OPT_HELP);
+				logger(msg, WARNING, true, 1);
+			} else
+				set_opt_with_value(args, raw, &i);
 		}
-		// else if () { IP o FQDN
-			
-		// } else {}
-			
+		else if (strncmp(raw[i], "-", 1))
+			set_host(raw[i], args);
+		else {
+			if (!strncmp(raw[i], "--", 2))
+				sprintf(msg, "ping: unrecognized option '%s'\n%s", raw[i], OPT_HELP);
+			else 
+				sprintf(msg, "ping: invalid option -- '%c'\n%s", raw[i][1], OPT_HELP);
+			logger(msg, ERROR, true, 1);
+		}
 	}
 }

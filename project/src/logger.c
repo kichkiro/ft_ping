@@ -6,27 +6,31 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/25 16:25:54 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/03/26 12:59:12 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
 void logger(char *msg, int level, bool to_exit, int exit_code) {
+	char new_msg[500];
+	int fd;
+
 	if (msg && *msg) {
-		if (level == INFO) {
-			write(1, BLUE, strlen(BLUE));
-			write(1, msg, strlen(msg));
-			write(1, NO_COLOR, strlen(NO_COLOR));
+		if (level == DEBUG) {
+			fd = 1;
+			sprintf(new_msg, "%s%s%s", NO_COLOR, msg, NO_COLOR);
+		} else if (level == INFO) {
+			fd = 1;
+			sprintf(new_msg, "%s%s%s", BLUE, msg, BLUE);
 		} else if (level == WARNING) {
-			write(2, YELLOW, strlen(YELLOW));
-			write(2, msg, strlen(msg));
-			write(2, NO_COLOR, strlen(NO_COLOR));
+			fd = 2;
+			sprintf(new_msg, "%s%s%s", YELLOW, msg, YELLOW);
 		} else if (level == ERROR) {
-			write(2, RED, strlen(RED));
-			write(2, msg, strlen(msg));
-			write(2, NO_COLOR, strlen(NO_COLOR));
+			fd = 2;
+			sprintf(new_msg, "%s%s%s", RED, msg, RED);
 		}
+		write(fd, new_msg, strlen(new_msg));
 	}
 	if (to_exit)
 		exit(exit_code);

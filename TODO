@@ -1,0 +1,10 @@
+# TODO
+
+## Parser:
+
+ping -f -w 127.0.0.1
+ping: invalid value (`127.0.0.1' near `.0.0.1')
+
+./ft_ping -f -w 127.0.0.1
+ping: missing host operand
+Try 'ping --help' or 'ping --usage' for more information.

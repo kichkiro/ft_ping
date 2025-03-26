@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:39 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/25 16:52:01 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/03/26 15:05:14 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,11 @@ int main(int ac, char **av) {
 
 	memset(&args, 0, sizeof(args));
 	parser(av, &args);
-	if (!args.host_fqdn && !args.host_ip) {
+	if (!args.host_fqdn && !args.host_ip.s_addr) {
 		sprintf(msg, "%s%s", OPT_MISSING_HOST, OPT_HELP);
 		logger(msg, WARNING, true, 64);
 	}
-
+	ping(&args);
 	return 0;
 }
 
