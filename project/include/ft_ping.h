@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:00:59 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/26 15:04:52 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/01 17:10:06 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,10 @@
 #include <netinet/ip.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
-#include <time.h>
+#include <sys/time.h>
 #include <netdb.h>
+#include <signal.h>
+#include <fcntl.h>
 
 // Colors --------------------------------------------------------------------->
 #define NO_COLOR "\033[0m"
@@ -40,6 +42,10 @@
 #define INFO    2
 #define WARNING 3
 #define ERROR   4
+
+// API ------------------------------------------------------------------------>
+#define GET 0
+#define SET 0
 
 // Log - Messagges ------------------------------------------------------------>
 #define OPT_HELP "Try 'ping --help' or 'ping --usage' for more information.\n"
@@ -86,10 +92,6 @@
     "            [--help] [--usage] [--version]\n"\
     "            HOST ..."
 
-// ICMP TYPE ------------------------------------------------------------------>
-// #define ECHO_REPLY   0
-// #define ECHO_REQUEST 8
-
 // Structures ----------------------------------------------------------------->
 typedef struct {
     bool set;
@@ -132,18 +134,18 @@ typedef struct {
 } t_opt_iptimestamp;
 
 typedef struct {
-	bool verbose;
-	bool flood;
-	bool numeric;
-	bool ignore_routing;
-	t_opt_preload preload;
-	t_opt_timeout timeout;
-	t_opt_linger linger;
-	t_opt_pattern pattern;
-	t_opt_size size;
-	t_opt_tos tos;
-	t_opt_ttl ttl;
-	t_opt_iptimestamp ip_timestamp;
+    bool verbose;
+    bool flood;
+    bool numeric;
+    bool ignore_routing;
+    t_opt_preload preload;
+    t_opt_timeout timeout;
+    t_opt_linger linger;
+    t_opt_pattern pattern;
+    t_opt_size size;
+    t_opt_tos tos;
+    t_opt_ttl ttl;
+    t_opt_iptimestamp ip_timestamp;
 } t_options;
 
 typedef struct {
@@ -153,17 +155,29 @@ typedef struct {
 } t_args;
 
 typedef struct {
-    uint8_t type;     
-    uint8_t code;     
-    uint16_t checksum;
-    uint16_t id;      
-    uint16_t sequence;
-    char data[32];    
-} t_icmp_pachet;
+    struct icmphdr header;
+    char payload[56];
+} t_icmp_packet;
+
+typedef struct {
+    char *host;
+    int pkts_tx;
+    int pkts_rx;
+    int pkt_loss;
+    double rtt_min;
+    double rtt_avg;
+    double rtt_max;
+    double rtt_stddev;
+} t_statistics;
+
+// Global Variables ----------------------------------------------------------->
+extern t_statistics stat;
 
 // Functions ------------------------------------------------------------------>
 void ping(t_args *args);
 void parser(char **raw, t_args *args);
 void logger(char *msg, int level, bool to_exit, int exit_code);
+void sigint_handler(int sig);
+void statistics_handler(char action);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/03/26 12:59:12 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/03/31 12:00:55 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,16 @@ void logger(char *msg, int level, bool to_exit, int exit_code) {
 		if (level == DEBUG) {
 			fd = 1;
 			sprintf(new_msg, "%s%s%s", NO_COLOR, msg, NO_COLOR);
-		} else if (level == INFO) {
+		}
+		else if (level == INFO) {
 			fd = 1;
 			sprintf(new_msg, "%s%s%s", BLUE, msg, BLUE);
-		} else if (level == WARNING) {
+		}
+		else if (level == WARNING) {
 			fd = 2;
 			sprintf(new_msg, "%s%s%s", YELLOW, msg, YELLOW);
-		} else if (level == ERROR) {
+		}
+		else if (level == ERROR) {
 			fd = 2;
 			sprintf(new_msg, "%s%s%s", RED, msg, RED);
 		}
