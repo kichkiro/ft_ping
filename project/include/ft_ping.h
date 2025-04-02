@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:00:59 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/01 17:10:06 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/02 16:16:25 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,21 +15,21 @@
 
 // Libraries ------------------------------------------------------------------>
 #include <unistd.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <ctype.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <netinet/ip.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
-#include <sys/time.h>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <signal.h>
-#include <fcntl.h>
 
 // Colors --------------------------------------------------------------------->
 #define NO_COLOR "\033[0m"
@@ -42,55 +42,6 @@
 #define INFO    2
 #define WARNING 3
 #define ERROR   4
-
-// API ------------------------------------------------------------------------>
-#define GET 0
-#define SET 0
-
-// Log - Messagges ------------------------------------------------------------>
-#define OPT_HELP "Try 'ping --help' or 'ping --usage' for more information.\n"
-#define OPT_MISSING_HOST "ping: missing host operand\n"
-#define OPT_MSG_HELP \
-    "Usage: ping [OPTION...] HOST ...\n"\
-    "Send ICMP ECHO_REQUEST packets to network hosts.\n\n"\
-    " Options valid for all request types:\n\n"\
-    "  -n, --numeric              do not resolve host addresses\n"\
-    "  -r, --ignore-routing       send directly to a host on an attached network\n"\
-    "      --ttl=N                specify N as time-to-live\n"\
-    "  -T, --tos=NUM              set type of service (TOS) to NUM\n"\
-    "  -v, --verbose              verbose output\n"\
-    "  -w, --timeout=N            stop after N seconds\n"\
-    "  -W, --linger=N             number of seconds to wait for response\n\n"\
-    " Options valid for --echo requests:\n\n"\
-    "  -f, --flood                flood ping (root only)\n"\
-    "      --ip-timestamp=FLAG    IP timestamp of type FLAG, which is one of\n"\
-    "                             \"tsonly\" and \"tsaddr\"\n"\
-    "  -l, --preload=NUMBER       send NUMBER packets as fast as possible before\n"\
-    "                             falling into normal mode of behavior (root only)\n"\
-    "  -p, --pattern=PATTERN      fill ICMP packet with given pattern (hex)\n"\
-    "  -s, --size=NUMBER          send NUMBER data octets\n\n"\
-    "  -?, --help                 give this help list\n"\
-    "      --usage                give a short usage message\n"\
-    "  -V, --version              print program version\n\n"\
-    "Mandatory or optional arguments to long options are also mandatory or optional\n"\
-    "for any corresponding short options.\n\n"\
-    "Options marked with (root only) are available only to superuser.\n\n"\
-    "Report bugs to <kichkiro@student.42firenze.it>."
-#define OPT_MSG_VERSION \
-    "ping (42 School) 1.0\n"\
-    "Copyright (C) 2025 Free Software Foundation, Inc.\n"\
-    "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\n"\
-    "This is free software: you are free to change and redistribute it.\n"\
-    "There is NO WARRANTY, to the extent permitted by law.\n\n"\
-    "Written by kichkiro."
-#define OPT_MSG_USAGE \
-    "Usage: ping [-nrvf?V] [-T NUM] [-w N] [-W N] [-l NUMBER]\n"\
-    "            [-p PATTERN] [-s NUMBER] [--numeric] [--ignore-routing]\n"\
-    "            [--ttl=N] [--tos=NUM] [--verbose] [--timeout=N]\n"\
-    "            [--linger=N] [--flood] [--ip-timestamp=FLAG]\n"\
-    "            [--preload=NUMBER] [--pattern=PATTERN] [--size=NUMBER]\n"\
-    "            [--help] [--usage] [--version]\n"\
-    "            HOST ..."
 
 // Structures ----------------------------------------------------------------->
 typedef struct {
@@ -149,8 +100,7 @@ typedef struct {
 } t_options;
 
 typedef struct {
-    struct in_addr host_ip;
-    char *host_fqdn;
+    char *host;
     t_options options;
 } t_args;
 
@@ -160,7 +110,7 @@ typedef struct {
 } t_icmp_packet;
 
 typedef struct {
-    char *host;
+    char host[100];
     int pkts_tx;
     int pkts_rx;
     int pkt_loss;
@@ -177,7 +127,14 @@ extern t_statistics stat;
 void ping(t_args *args);
 void parser(char **raw, t_args *args);
 void logger(char *msg, int level, bool to_exit, int exit_code);
-void sigint_handler(int sig);
-void statistics_handler(char action);
+void log_missing_option_arg(char *raw);
+void log_invalid_option(char *raw);
+void log_help(void);
+void log_version(void);
+void log_usage(void);
+void log_missing_host(void);
+void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, bool v,
+	bool init, struct ip *ip_header, double rtt);
+void log_statistics(void);
 
 #endif

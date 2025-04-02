@@ -6,7 +6,7 @@
 #    By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 16:03:40 by kichkiro          #+#    #+#              #
-#    Updated: 2025/04/01 15:58:53 by kichkiro         ###   ########.fr        #
+#    Updated: 2025/04/02 16:08:45 by kichkiro         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,8 +17,7 @@ SRCS		:= \
 				main.c \
 				ping.c \
 				logger.c \
-				parser.c \
-				sigint.c
+				parser.c
 SRC_DIR     := src
 SRCS        := $(SRCS:%=$(SRC_DIR)/%)
 BUILD_DIR   := .build
@@ -26,7 +25,7 @@ OBJS        := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEPS        := $(OBJS:.o=.d)
 INCS        := ./include
 CC          := gcc
-CFLAGS      := -g -Wall -Wextra -Werror
+CFLAGS      := -g -Wall -Wextra -Werror -lm
 CPPFLAGS    := $(addprefix -I,$(INCS)) -MMD -MP
 RM          := rm -rf
 MAKEFLAGS   := --no-print-directory
