@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/02 15:19:39 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/07 11:38:53 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ void log_statistics(void) {
 	logger(logs, INFO, true, EXIT_SUCCESS);
 }
 
-void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, bool v,
+void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, bool v, \
 	bool init, struct ip *ip_header, double rtt) {
 	char logs[250];
 	int len;

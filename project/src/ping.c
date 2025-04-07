@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:39:41 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/02 16:14:29 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/07 16:07:03 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ static struct ip *recv_packet(int serv_fd, struct sockaddr_in *dest_addr, ssize_
 	socklen_t addr_len;
 
 	memset(&ip_header, 0, sizeof(ip_header));
+	memset(rbuf, 0, sizeof(rbuf));
 	addr_len = sizeof(*dest_addr);
 	if ((*bytes = recvfrom(serv_fd, rbuf, sizeof(rbuf), 0,
 						   (struct sockaddr *)dest_addr, &addr_len)) <= 0)
@@ -98,7 +99,8 @@ static void run(int serv_fd, t_args *args, struct sockaddr_in dest_addr, bool in
 		stat.rtt_min = (rtt < stat.rtt_min || !stat.rtt_min) ? rtt : stat.rtt_min; 
 		stat.rtt_avg = (stat.rtt_avg * (stat.pkts_rx - 1) + rtt) / stat.pkts_rx;
 		stat.rtt_max = (rtt > stat.rtt_max) ? rtt : stat.rtt_max;
-		// stat.rtt_stddev = 
+		stat.rtt_m2 = (stat.rtt_m2 * (stat.pkts_rx - 1) + rtt * rtt) / stat.pkts_rx;
+		stat.rtt_stddev = sqrt(stat.rtt_m2 - stat.rtt_avg * stat.rtt_avg);
 	}
 	log_run_ping(&req, &dest_addr, args->options.verbose, init, ip_header, rtt);
 	usleep(1000000 - (rtt * 1000));
@@ -128,4 +130,5 @@ void ping(t_args *args) {
 		run(serv_fd, args, dest_addr, init);
 		init = false;
 	}
+	close(serv_fd);
 }

@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:39 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/02 15:26:34 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/07 11:34:09 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 static void sigint_handler(int sig) {
 	if (sig == SIGINT) {
-		// close(serv_fd);
 		if (stat.pkt_loss || stat.pkts_rx || stat.pkts_tx)
 			log_statistics();
 	}

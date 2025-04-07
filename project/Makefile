@@ -6,7 +6,7 @@
 #    By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 16:03:40 by kichkiro          #+#    #+#              #
-#    Updated: 2025/04/02 16:08:45 by kichkiro         ###   ########.fr        #
+#    Updated: 2025/04/07 11:27:49 by kichkiro         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,8 +25,9 @@ OBJS        := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEPS        := $(OBJS:.o=.d)
 INCS        := ./include
 CC          := gcc
-CFLAGS      := -g -Wall -Wextra -Werror -lm
-CPPFLAGS    := $(addprefix -I,$(INCS)) -MMD -MP
+CFLAGS      := -g -Wall -Wextra -Werror
+CPPFLAGS    := $(addprefix -I,$(INCS)) -MMD -MP 
+LDFLAGS     := -lm
 RM          := rm -rf
 MAKEFLAGS   := --no-print-directory
 DIR_DUP     = mkdir -p $(@D)
@@ -39,7 +40,7 @@ DIR_DUP     = mkdir -p $(@D)
 all: banner $(NAME)
 
 $(NAME): $(OBJS)
-	$(CC) $(OBJS) -o $(NAME)
+	$(CC) $(OBJS) -o $(NAME) $(LDFLAGS)
 	${info ${BLUE}[+] INFO: Creating  -> $(NAME)${NO_COLOR}}
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
