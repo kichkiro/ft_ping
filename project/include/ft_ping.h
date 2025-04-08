@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:00:59 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/07 11:39:02 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/08 15:51:44 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <netinet/in.h>
@@ -111,6 +112,11 @@ typedef struct {
 } t_icmp_packet;
 
 typedef struct {
+    struct ip *ip_header;
+	struct icmp *icmp_header;
+} t_packet;
+
+typedef struct {
     char host[100];
     int pkts_tx;
     int pkts_rx;
@@ -135,8 +141,12 @@ void log_help(void);
 void log_version(void);
 void log_usage(void);
 void log_missing_host(void);
-void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, bool v, \
-	bool init, struct ip *ip_header, double rtt);
+void log_run_ping_init(t_icmp_packet *req, struct sockaddr_in *dest_addr,
+	bool verbose);
+void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, 
+    t_packet response, double rtt, bool verbose);
 void log_statistics(void);
+size_t ft_int_len(int n);
+size_t ft_str_realloc(char **ptr, size_t old_size, size_t add_size);
 
 #endif

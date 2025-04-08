@@ -6,7 +6,7 @@
 #    By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 16:03:40 by kichkiro          #+#    #+#              #
-#    Updated: 2025/04/07 11:27:49 by kichkiro         ###   ########.fr        #
+#    Updated: 2025/04/08 15:52:01 by kichkiro         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,9 @@ SRCS		:= \
 				main.c \
 				ping.c \
 				logger.c \
-				parser.c
+				parser.c \
+				libft/ft_int_len.c \
+				libft/ft_str_realloc.c
 SRC_DIR     := src
 SRCS        := $(SRCS:%=$(SRC_DIR)/%)
 BUILD_DIR   := .build

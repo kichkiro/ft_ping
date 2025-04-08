@@ -6,58 +6,98 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/07 11:38:53 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/08 16:15:33 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
 void log_statistics(void) {
-	char logs[1000];
+	char *logs;
+	size_t logs_size;
 
+	logs_size = 256;
+	if (!(logs = (char *)calloc(logs_size, sizeof(char))))
+		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
 	stat.pkt_loss = stat.pkt_loss * 100 / stat.pkts_tx;
 	if (stat.pkt_loss != 100)
-		snprintf(logs, sizeof(logs), "--- %s ping statistics ---\n" \
+		snprintf(logs, logs_size, "--- %s ping statistics ---\n" \
 			"%d packets transmitted, %d packets received, %d%% packet loss\n"
 			"round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
 			stat.host, stat.pkts_tx, stat.pkts_rx, stat.pkt_loss, stat.rtt_min,
 			stat.rtt_avg, stat.rtt_max, stat.rtt_stddev
 		);
-	else 
-		snprintf(logs, sizeof(logs), "--- %s ping statistics ---\n" \
+	else
+		snprintf(logs, logs_size, "--- %s ping statistics ---\n" \
 			"%d packets transmitted, %d packets received, %d%% packet loss\n",
 			stat.host, stat.pkts_tx, stat.pkts_rx, stat.pkt_loss
 		);
 	logger(logs, INFO, true, EXIT_SUCCESS);
+	free(logs);
 }
 
-void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, bool v, \
-	bool init, struct ip *ip_header, double rtt) {
-	char logs[250];
-	int len;
+void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr,
+	t_packet response, double rtt, bool verbose) {
+	struct ip *hdr;
+	int icmp_type;
+	char *logs;
+	size_t logs_size;
+	size_t offset;
 
-	memset(&logs, 0, (sizeof(logs)));
-	len = 0;
-	if (init) {
-		if (v)
-			snprintf(logs, sizeof(logs), "PING %s (%s): %ld data bytes, id 0x0%x = %d\n",
-				stat.host, inet_ntoa(dest_addr->sin_addr),
-				sizeof(req->payload), req->header.un.echo.id,
-				req->header.un.echo.id
-			);
-		else
-			snprintf(logs, sizeof(logs), "PING %s (%s): %ld data bytes\n",
-				stat.host, inet_ntoa(dest_addr->sin_addr), sizeof(req->payload)
-			);
-		len = strlen(logs);
+	hdr = response.ip_header;
+	if (!ntohs(hdr->ip_len))
+		return;
+	logs_size = ft_int_len(ntohs(hdr->ip_len) - hdr->ip_hl * 4) +
+		strlen(inet_ntoa(dest_addr->sin_addr)) + 50;
+	if (!(logs = (char *)calloc(logs_size, sizeof(char))))
+		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
+	offset = snprintf(logs, logs_size + 1, "%d bytes from %s: ",
+		ntohs(hdr->ip_len) - hdr->ip_hl * 4,
+		inet_ntoa(dest_addr->sin_addr)
+	);
+	icmp_type = response.icmp_header->icmp_type;
+	if (icmp_type == 3)
+		offset += snprintf(logs + offset, logs_size - offset, 
+			"Destination Host Unreachable\n");
+	else if (icmp_type == 11)
+		offset += snprintf(logs + offset, logs_size - offset, 
+			"Time to live exceeded\n");
+	else if (hdr) {
+		logs_size = ft_str_realloc(&logs, logs_size, 25 +
+			ft_int_len(req->header.un.echo.sequence) + 
+			ft_int_len(hdr->ip_ttl) + ft_int_len(rtt)
+		);
+		offset += snprintf(logs + offset, logs_size - offset, 
+			"icmp_seq=%d ttl=%d time=%.3f ms\n",
+			req->header.un.echo.sequence, hdr->ip_ttl, rtt);
 	}
-	if (ip_header) {
-		snprintf(logs + len, sizeof(logs), "%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
-			ntohs(ip_header->ip_len) - ip_header->ip_hl * 4,
-			inet_ntoa(dest_addr->sin_addr), req->header.un.echo.sequence,
-			ip_header->ip_ttl, rtt
+	if (verbose) {
+		logs_size = ft_str_realloc(&logs, logs_size, 
+			strlen("Time to live exceeded\n"));
+		offset += snprintf(logs + offset, logs_size - offset, "IP Hdr Dump:\n"
+			" %x%x%x  \n",
+			hdr->ip_v, hdr->ip_hl, hdr->ip_tos >> 2
 		);
 	}
+	logger(logs, INFO, false, 0);
+	free(logs);
+}
+
+void log_run_ping_init(t_icmp_packet *req, struct sockaddr_in *dest_addr,
+	bool verbose) {
+	char logs[250];
+
+	memset(&logs, 0, (sizeof(logs)));
+	if (verbose)
+		snprintf(logs, sizeof(logs), "PING %s (%s): %ld data bytes, id 0x0%x = %d\n",
+			stat.host, inet_ntoa(dest_addr->sin_addr),
+			sizeof(req->payload), req->header.un.echo.id,
+			req->header.un.echo.id
+		);
+	else
+		snprintf(logs, sizeof(logs), "PING %s (%s): %ld data bytes\n",
+			stat.host, inet_ntoa(dest_addr->sin_addr), sizeof(req->payload)
+		);
 	logger(logs, INFO, false, 0);
 }
 
@@ -141,28 +181,33 @@ void log_missing_option_arg(char *raw) {
 }
 
 void logger(char *msg, int level, bool to_exit, int exit_code) {
-	char logs[500];
+	char *logs;
+	size_t logs_size;
 	int fd;
 
+	logs_size = 256;
+	if (!(logs = (char *)calloc(logs_size, sizeof(char))))
+		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
 	if (msg && *msg) {
 		if (level == DEBUG) {
 			fd = 1;
-			snprintf(logs, sizeof(logs), "%s", msg);
+			snprintf(logs, logs_size, "%s", msg);
 		}
 		else if (level == INFO) {
 			fd = 1;
-			snprintf(logs, sizeof(logs), "%s", msg);
+			snprintf(logs, logs_size, "%s", msg);
 		}
 		else if (level == WARNING) {
 			fd = 2;
-			snprintf(logs, sizeof(logs), "%s", msg);
+			snprintf(logs, logs_size, "%s", msg);
 		}
 		else if (level == ERROR) {
 			fd = 2;
-			snprintf(logs, sizeof(logs), "%s", msg);
+			snprintf(logs, logs_size, "%s", msg);
 		}
 		write(fd, logs, strlen(logs));
 	}
 	if (to_exit)
 		exit(exit_code);
+	free(logs);
 }
