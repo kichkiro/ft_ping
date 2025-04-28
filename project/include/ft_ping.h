@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:00:59 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/08 15:51:44 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/28 16:24:06 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,7 @@ typedef struct {
 typedef struct {
     struct icmphdr header;
     char payload[56];
-} t_icmp_packet;
+} t_icmp_pkt;
 
 typedef struct {
     struct ip *ip_header;
@@ -141,9 +141,8 @@ void log_help(void);
 void log_version(void);
 void log_usage(void);
 void log_missing_host(void);
-void log_run_ping_init(t_icmp_packet *req, struct sockaddr_in *dest_addr,
-	bool verbose);
-void log_run_ping(t_icmp_packet *req, struct sockaddr_in *dest_addr, 
+void log_run_ping_init(t_icmp_pkt *req, struct sockaddr_in *dest_addr, bool v);
+void log_run_ping(t_icmp_pkt *req, struct sockaddr_in *dest_addr, 
     t_packet response, double rtt, bool verbose);
 void log_statistics(void);
 size_t ft_int_len(int n);
