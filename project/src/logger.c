@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/28 17:28:27 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/28 17:30:01 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void log_run_ping(t_icmp_pkt *req, struct sockaddr_in *dest_addr, t_packet resp,
 		offset += snprintf(logs + offset, logs_sz - offset, "Time to live exceeded\n");
 	else {
 		logs_sz = ft_str_realloc(&logs, logs_sz, 25 + ft_int_len(seq) + ft_int_len(hdr->ip_ttl) + ft_int_len(rtt));
-		offset += snprintf(logs + offset, logs_sz - offset, "icmp_seq=%d ttl=%d time=%.3f ms\n", seq, hdr->ip_ttl, rtt);
+		offset += snprintf(logs + offset, logs_sz - offset, "icmp_seq=%ld ttl=%d time=%.3f ms\n", seq, hdr->ip_ttl, rtt);
 	}
 	if (v && icmp_type == 3) {
 		logs_sz = ft_str_realloc(&logs, logs_sz, 50);
