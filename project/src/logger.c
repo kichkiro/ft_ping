@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 17:05:01 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/28 16:23:52 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/28 17:28:27 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,50 +36,35 @@ void log_statistics(void) {
 	free(logs);
 }
 
-void log_run_ping(t_icmp_pkt *req, struct sockaddr_in *dest_addr, 
-	t_packet response, double rtt, bool verbose) {
+void log_run_ping(t_icmp_pkt *req, struct sockaddr_in *dest_addr, t_packet resp, 
+	double rtt, bool v) {
 	struct ip *hdr;
 	int icmp_type;
 	char *logs;
 	size_t logs_sz;
 	size_t offset;
+	size_t seq;
 
-	hdr = response.ip_header;
-	if (!response.icmp_header || !hdr || !ntohs(hdr->ip_len))
+	icmp_type = resp.icmp_header->icmp_type;
+	seq = req->header.un.echo.sequence;
+	hdr = resp.ip_header;
+	if (!resp.icmp_header || !hdr || !ntohs(hdr->ip_len))
 		return;
-	
-	logs_sz = ft_int_len(ntohs(hdr->ip_len) - hdr->ip_hl * 4) +
-		strlen(inet_ntoa(dest_addr->sin_addr)) + 50;
+	logs_sz = ft_int_len(ntohs(hdr->ip_len) - hdr->ip_hl * 4) + strlen(inet_ntoa(dest_addr->sin_addr)) + 50;
 	if (!(logs = (char *)calloc(logs_sz, sizeof(char))))
 		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
-	offset = snprintf(logs, logs_sz, "%d bytes from %s: ",
-		ntohs(hdr->ip_len) - hdr->ip_hl * 4,
-		inet_ntoa(dest_addr->sin_addr)
-	);
-	icmp_type = response.icmp_header->icmp_type;
-
+	offset = snprintf(logs, logs_sz, "%d bytes from %s: ", ntohs(hdr->ip_len) - hdr->ip_hl * 4, inet_ntoa(dest_addr->sin_addr));
 	if (icmp_type == 3)
-		offset += snprintf(logs + offset, logs_sz - offset, 
-			"Destination Host Unreachable\n");
+		offset += snprintf(logs + offset, logs_sz - offset, "Destination Host Unreachable\n");
 	else if (icmp_type == 11)
-		offset += snprintf(logs + offset, logs_sz - offset, 
-			"Time to live exceeded\n");
+		offset += snprintf(logs + offset, logs_sz - offset, "Time to live exceeded\n");
 	else {
-		logs_sz = ft_str_realloc(&logs, logs_sz, 25 +
-			ft_int_len(req->header.un.echo.sequence) + 
-			ft_int_len(hdr->ip_ttl) + ft_int_len(rtt)
-		);
-		offset += snprintf(logs + offset, logs_sz - offset, 
-			"icmp_seq=%d ttl=%d time=%.3f ms\n",
-			req->header.un.echo.sequence, hdr->ip_ttl, rtt);
+		logs_sz = ft_str_realloc(&logs, logs_sz, 25 + ft_int_len(seq) + ft_int_len(hdr->ip_ttl) + ft_int_len(rtt));
+		offset += snprintf(logs + offset, logs_sz - offset, "icmp_seq=%d ttl=%d time=%.3f ms\n", seq, hdr->ip_ttl, rtt);
 	}
-
-	if (verbose && icmp_type == 3) {
+	if (v && icmp_type == 3) {
 		logs_sz = ft_str_realloc(&logs, logs_sz, 50);
-		offset += snprintf(logs + offset, logs_sz - offset, "IP Hdr Dump:\n"
-			" %x%x%x  \n",
-			hdr->ip_v, hdr->ip_hl, hdr->ip_tos >> 2
-		);
+		offset += snprintf(logs + offset, logs_sz - offset, "IP Hdr Dump:\n %x%x%x  \n", hdr->ip_v, hdr->ip_hl, hdr->ip_tos >> 2);
 	}
 	logger(logs, INFO, false, 0);
 	free(logs);

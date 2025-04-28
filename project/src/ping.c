@@ -6,7 +6,7 @@
 /*   By: kichkiro <kichkiro@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:39:41 by kichkiro          #+#    #+#             */
-/*   Updated: 2025/04/28 16:48:03 by kichkiro         ###   ########.fr       */
+/*   Updated: 2025/04/28 17:18:07 by kichkiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,14 +37,12 @@ static void recv_packet(int serv_fd, struct sockaddr_in *dest_addr, t_packet **r
 	socklen_t addr_len;
 	int ip_header_len;
 	
-    if (!(*response = (t_packet *)calloc(1, sizeof(t_packet))))
-		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
-    if (!(rbuf = (char *)calloc(1024, sizeof(char)))) {
+    if (!(rbuf = (char *)calloc(1024, sizeof(char))))
         logger("ping: calloc: memory allocation failed", ERROR, true, 1);
-        free(*response);
-	}	
     addr_len = sizeof(*dest_addr);
-    bytes = recvfrom(serv_fd, rbuf, 1024, 0, (struct sockaddr *)dest_addr, &addr_len);
+    if ((bytes = recvfrom(serv_fd, rbuf, 1024, 0, (struct sockaddr *)dest_addr, 
+		&addr_len)) == -1)
+		logger("ping: recvfrom: failed to receive", ERROR, true, 1);
     (*response)->ip_header = (struct ip *)rbuf;
     ip_header_len = (*response)->ip_header->ip_hl * 4;
     (*response)->icmp_header = (struct icmp *)(rbuf + ip_header_len);
@@ -65,21 +63,19 @@ static void send_packet(int serv_fd, struct sockaddr_in *dest_addr, t_icmp_pkt *
 static void set_packet(t_icmp_pkt *request, bool init) {
 	struct timeval ts;
 	static char data[40];
+	static size_t seq = 0;
 
 	if (init) {
 		for (int i = 0; i < 40; i++)
 			data[i] = (unsigned char)i;
-		memset(request, 0, sizeof(*request));
-		request->header.type = ICMP_ECHO;
-		request->header.code = 0;
-		request->header.un.echo.id = getpid();
-		request->header.un.echo.sequence = 0;
 	}
-	else
-		request->header.un.echo.sequence++;
+	request->header.un.echo.sequence = seq++;
+	request->header.type = ICMP_ECHO;
+	request->header.code = 0;
+	request->header.un.echo.id = getpid();
 	memset(&ts, 0, sizeof(ts));
 	gettimeofday(&ts, 0);
-	memset(request->payload, 0, 64);
+	memset(request->payload, 0, sizeof(request->payload));
 	memcpy(request->payload, &ts, sizeof(ts));
 	memcpy(request->payload + sizeof(ts), &data, sizeof(data));
 	request->header.checksum = 0;
@@ -87,18 +83,20 @@ static void set_packet(t_icmp_pkt *request, bool init) {
 }
 
 static void run(int serv_fd, t_args *args, struct sockaddr_in dest_addr, bool init) {
-	t_icmp_pkt request;
+	t_icmp_pkt *request;
 	t_packet *response;
 	struct timeval ts_start, ts_end;
 	double rtt;
 
-	// request = NULL;
-	response = NULL;
-	set_packet(&request, init);
+	if (!(request = (t_icmp_pkt *)calloc(1, sizeof(t_icmp_pkt))))
+		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
+	if (!(response = (t_packet *)calloc(1, sizeof(t_packet))))
+		logger("ping: calloc: memory allocation failed", ERROR, true, 1);
+	set_packet(request, init);
 	if (init)
-		log_run_ping_init(&request, &dest_addr, args->options.verbose);
+		log_run_ping_init(request, &dest_addr, args->options.verbose);
 	gettimeofday(&ts_start, 0);	
-	send_packet(serv_fd, &dest_addr, &request);
+	send_packet(serv_fd, &dest_addr, request);
 	recv_packet(serv_fd, &dest_addr, &response);
 	gettimeofday(&ts_end, 0);
 	rtt = ((ts_end.tv_sec - ts_start.tv_sec) * 1000) + \
@@ -110,8 +108,8 @@ static void run(int serv_fd, t_args *args, struct sockaddr_in dest_addr, bool in
 		stat.rtt_m2 = (stat.rtt_m2 * (stat.pkts_rx - 1) + rtt * rtt) / stat.pkts_rx;
 		stat.rtt_stddev = sqrt(stat.rtt_m2 - stat.rtt_avg * stat.rtt_avg);
 	}
-	log_run_ping(&request, &dest_addr, *response, rtt,args->options.verbose);
-	// free(request);
+	log_run_ping(request, &dest_addr, *response, rtt,args->options.verbose);
+	free(request);
 	free(response->ip_header);
 	free(response);
 	usleep(1000000 - (rtt * 1000));
