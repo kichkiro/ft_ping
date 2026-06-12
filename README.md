@@ -1,4 +1,4 @@
-<img src="https://github.com/kichkiro/42/blob/assets/banner_ft_ping.png?raw=true" width="100%"/>
+<img src="https://github.com/kichkiro/kichkiro/blob/main/assets/banner_ft_ping.png?raw=true" width="100%"/>
 
 <i>
   <p>
@@ -339,7 +339,7 @@ You can filter the traffic with some useful filters:
 - `ip.src == <your_ip>` – Filter packets sent by your host.
 - `ip.dst == <target_ip>` – Filter packets sent to the target.
 
-<img src="https://github.com/kichkiro/42/blob/assets/ft_ping_wireshark.png?raw=true" width="100%"/>
+<img src="https://github.com/kichkiro/kichkiro/blob/main/assets/ft_ping_wireshark.png?raw=true" width="100%"/>
 
 Below is an example of an ICMP Echo Request packet as dissected by Wireshark:
 
